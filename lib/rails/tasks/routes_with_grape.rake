@@ -6,8 +6,8 @@ task routes_with_grape: :environment do
   grape_klasses.each do |klass|
     klass.compile
     klass.routes.each do |route|
-      path = ActionDispatch::Journey::Path::Pattern.new route.route_path
-      all_routes.add_route(klass, path, {
+      path = ActionDispatch::Journey::Path::Pattern.from_string route.route_path
+      all_routes.add_route(app, path, {
         request_method: %r{^#{route.route_method}$}
       }, {}, route.route_description)
     end
