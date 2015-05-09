@@ -1,24 +1,14 @@
-require 'rails/info_controller'
+require 'rails/routes_with_grape'
 
 class Rails::InfoController < Rails::ApplicationController # :nodoc:
   prepend_view_path ActionDispatch::DebugExceptions::RESCUES_TEMPLATE_PATH
   prepend_view_path File.expand_path('../../../app/views', __FILE__)
 
-  def routes_with_grape
-    all_routes = _routes.routes
-    grape_klasses = ObjectSpace.each_object(Class).select { |klass| klass < Grape::API }
-    app = all_routes.first.app
-    grape_klasses.each do |klass|
-      klass.compile
-      klass.routes.each do |route|
-        path = ActionDispatch::Journey::Path::Pattern.from_string route.route_path
-        all_routes.add_route(app, path, {
-          request_method: %r{^#{route.route_method}$}
-        }, {}, route.route_description)
-      end
-    end
+  include RoutesWithGrape
 
-    @routes_inspector = ActionDispatch::Routing::RoutesInspector.new(all_routes)
+  def routes_with_grape
+    rails_routes = append_grape_to(_routes)
+    @routes_inspector = ActionDispatch::Routing::RoutesInspector.new(rails_routes)
     @page_title = 'Routes with grape'
     render layout: 'grape-rails-routes'
   end
